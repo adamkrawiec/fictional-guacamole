@@ -1,0 +1,222 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  fictional-guacamole - one EC2 instance running the Express app, an S3 bucket
+  for build artifacts, and an IAM role GitHub Actions assumes (via OIDC) to deploy.
+
+Parameters:
+  GitHubRepo:
+    Type: String
+    Default: adamkrawiec/fictional-guacamole
+    Description: owner/repo allowed to deploy
+  GitHubBranch:
+    Type: String
+    Default: main
+    Description: Only workflow runs on this branch can deploy
+  CreateGitHubOIDCProvider:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+    Description: Set to "false" if this AWS account already has the token.actions.githubusercontent.com OIDC provider
+  InstanceType:
+    Type: String
+    Default: t3.micro
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+
+Conditions:
+  CreateOIDC: !Equals [!Ref CreateGitHubOIDCProvider, "true"]
+
+Resources:
+  # ---------- S3: build artifacts ----------
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldReleases
+            Status: Enabled
+            Prefix: releases/
+            ExpirationInDays: 30
+
+  # ---------- GitHub Actions -> AWS (OIDC, no stored keys) ----------
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOIDC
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+        - 1c58a3a8518e8759bf075b76b750d4f2df264fcd
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Assumed by GitHub Actions to deploy fictional-guacamole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - CreateOIDC
+                - !Ref GitHubOIDCProvider
+                - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepo}:ref:refs/heads/${GitHubBranch}
+      Policies:
+        - PolicyName: deploy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub ${ArtifactBucket.Arn}/releases/*
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+                  - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${AppInstance}
+              - Effect: Allow
+                Action:
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: "*"
+
+  # ---------- EC2 instance ----------
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        # Lets SSM run deploy commands and gives you browser shell access (Session Manager)
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: read-artifacts
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub ${ArtifactBucket.Arn}/releases/*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: fictional-guacamole - HTTP in, no SSH
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: [!GetAtt AppSecurityGroup.GroupId]
+      MetadataOptions:
+        HttpTokens: required
+      Tags:
+        - Key: Name
+          Value: fictional-guacamole
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -euxo pipefail
+
+          # Node.js 22 (falls back to the distro default if the versioned package is missing)
+          dnf install -y nodejs22 || dnf install -y nodejs
+          NODE_BIN="$(command -v node-22 || command -v node)"
+
+          useradd --system --home-dir /opt/app --shell /sbin/nologin app || true
+          mkdir -p /opt/app/releases
+          chown -R app:app /opt/app
+
+          cat > /etc/systemd/system/app.service <<EOF
+          [Unit]
+          Description=fictional-guacamole
+          After=network-online.target
+          ConditionPathExists=/opt/app/current/dist/server.js
+
+          [Service]
+          User=app
+          WorkingDirectory=/opt/app/current
+          Environment=NODE_ENV=production
+          Environment=PORT=80
+          AmbientCapabilities=CAP_NET_BIND_SERVICE
+          ExecStart=$NODE_BIN dist/server.js
+          Restart=always
+          RestartSec=3
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          # Called by GitHub Actions through SSM: deploy-app s3://bucket/releases/<sha>.tar.gz
+          cat > /usr/local/bin/deploy-app <<'EOF'
+          #!/bin/bash
+          set -euo pipefail
+          SRC="$1"
+          RELEASE="/opt/app/releases/$(date +%Y%m%d%H%M%S)"
+          mkdir -p "$RELEASE"
+          aws s3 cp "$SRC" /tmp/release.tar.gz
+          tar -xzf /tmp/release.tar.gz -C "$RELEASE"
+          rm -f /tmp/release.tar.gz
+          chown -R app:app "$RELEASE"
+          ln -sfn "$RELEASE" /opt/app/current
+          systemctl daemon-reload
+          systemctl restart app
+          sleep 2
+          systemctl is-active app
+          # keep the 5 newest releases
+          ls -1dt /opt/app/releases/* | tail -n +6 | xargs -r rm -rf
+          echo "Deployed $SRC -> $RELEASE"
+          EOF
+          chmod +x /usr/local/bin/deploy-app
+
+          systemctl daemon-reload
+          systemctl enable app
+
+  AppElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref AppInstance
+      Tags:
+        - Key: Name
+          Value: fictional-guacamole
+
+Outputs:
+  AppUrl:
+    Value: !Sub http://${AppElasticIP.PublicIp}
+  InstanceId:
+    Value: !Ref AppInstance
+  ArtifactBucket:
+    Value: !Ref ArtifactBucket
+  DeployRoleArn:
+    Value: !GetAtt GitHubDeployRole.Arn

@@ -1,0 +1,13 @@
+{
+  // Config używany przez `npm run build` - kompiluje wyłącznie src/ do dist/,
+  // bez plików testowych.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"],
+  // Testy leżą obok kodu w src/, więc trzeba je wykluczyć z produkcyjnej emisji.
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
