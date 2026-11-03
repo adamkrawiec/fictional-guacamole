@@ -74,7 +74,7 @@ Resources:
                 - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
-              StringEquals:
+              StringLike:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
                 token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepo}:ref:refs/heads/${GitHubBranch}
       Policies:
