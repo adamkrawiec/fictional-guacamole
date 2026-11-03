@@ -27,6 +27,18 @@ variable "github_repo" {
   default     = "adamkrawiec/fictional-guacamole"
 }
 
+variable "github_owner_id" {
+  description = "Numeric ID of the repo owner, as it appears in GitHub's OIDC subject (owner@ID)"
+  type        = string
+  default     = "35483316"
+}
+
+variable "github_repo_id" {
+  description = "Numeric ID of the repo, as it appears in GitHub's OIDC subject (repo@ID)"
+  type        = string
+  default     = "1443529521"
+}
+
 variable "github_branch" {
   description = "Only workflow runs on this branch can deploy"
   type        = string
