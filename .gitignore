@@ -2,3 +2,9 @@ node_modules
 dist
 /node_modules/**
 /dist/**
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
