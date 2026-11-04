@@ -34,7 +34,7 @@ jobs:
         run: |
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
-      - name:  Deploy to EC2
+      - name: Deploy to EC2
         run: |
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ vars.EC2_INSTANCE_ID }}" \
@@ -42,5 +42,3 @@ jobs:
             --parameters "commands=[\"/usr/local/bin/deploy-app ${{ github.sha }}\"]" \
             --query Command.CommandId --output text)
           aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "${{ vars.EC2_INSTANCE_ID }}"
-  
-        

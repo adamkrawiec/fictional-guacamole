@@ -1,19 +1,14 @@
-import express, { Request, Response } from "express";
+import express from "express";
+import * as controller from "./app.controller";
 
 const app = express();
 
 app.use(express.json());
 
-app.get("/", (_req: Request, res: Response) => {
-  res.json({ message: "hello world" });
-});
+app.get("/", controller.hello);
 
-app.get("/test", (_req: Request, res: Response) => {
-  res.json({ message: "this is to test if docker builds work" })
-})
+app.get("/test", controller.test);
 
-app.get("/health", (_req: Request, res: Response) => {
-  res.json({ status: "ok" });
-});
+app.get("/health", controller.health);
 
 export default app;
