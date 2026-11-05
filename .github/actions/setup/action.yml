@@ -3,9 +3,11 @@ description: Install Node.js and project dependencies
 runs:
   using: composite
   steps:
+    # Installs the pnpm version pinned in package.json's "packageManager" field
+    - uses: pnpm/action-setup@v4
     - uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
-        cache: yarn
-    - run: yarn install --frozen-lockfile
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
       shell: bash
