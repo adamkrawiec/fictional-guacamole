@@ -1,4 +1,4 @@
-# ---------- Network: default VPC, HTTP in, no SSH ----------
+# ---------- Network: default VPC, HTTP in from the load balancer only, no SSH ----------
 data "aws_vpc" "default" {
   default = true
 }
@@ -9,13 +9,15 @@ resource "aws_security_group" "app" {
   vpc_id      = data.aws_vpc.default.id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "http" {
-  security_group_id = aws_security_group.app.id
-  description       = "HTTP"
-  ip_protocol       = "tcp"
-  from_port         = 80
-  to_port           = 80
-  cidr_ipv4         = "0.0.0.0/0"
+# Only the load balancer can reach the app; the instance keeps a public IP solely for outbound
+# traffic (ECR, SSM, CloudWatch), but nothing on the internet can connect to it directly.
+resource "aws_vpc_security_group_ingress_rule" "http_from_alb" {
+  security_group_id            = aws_security_group.app.id
+  description                  = "HTTP from the load balancer"
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  referenced_security_group_id = aws_security_group.alb.id
 }
 
 resource "aws_vpc_security_group_egress_rule" "all" {
@@ -113,15 +115,5 @@ resource "aws_instance" "app" {
   lifecycle {
     # A new Amazon Linux release would otherwise replace the instance on the next apply
     ignore_changes = [ami]
-  }
-}
-
-# Stable public address
-resource "aws_eip" "app" {
-  instance = aws_instance.app.id
-  domain   = "vpc"
-
-  tags = {
-    Name = var.project
   }
 }

@@ -50,3 +50,9 @@ variable "create_github_oidc_provider" {
   type        = bool
   default     = true
 }
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN (same region as the ALB) to enable HTTPS on the load balancer. Leave null for HTTP only."
+  type        = string
+  default     = null
+}

@@ -1,5 +1,10 @@
 output "app_url" {
-  value = "http://${aws_eip.app.public_ip}"
+  value = "${local.https_enabled ? "https" : "http"}://${aws_lb.app.dns_name}"
+}
+
+output "alb_dns_name" {
+  description = "Point a DNS record (CNAME, or Route 53 alias) at this"
+  value       = aws_lb.app.dns_name
 }
 
 output "ecr_repository_url" {
