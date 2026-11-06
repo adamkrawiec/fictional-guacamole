@@ -1,6 +1,6 @@
 import express from "express";
-import { health } from "./app.controller";
 import { api } from "./api.routes";
+import { health } from "./app.controller";
 
 const app = express();
 

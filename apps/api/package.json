@@ -9,12 +9,10 @@
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/server.js",
-    "test": "vitest",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "dev": "node dist/server.js",
+    "test": "vitest"
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.72.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",

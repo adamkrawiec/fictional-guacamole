@@ -5,3 +5,5 @@ dist
 infra
 .env*
 *.md
+**/node_modules
+**/dist

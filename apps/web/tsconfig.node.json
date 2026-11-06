@@ -1,0 +1,13 @@
+{
+  // vite.config.ts runs in Node, not the browser
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
+}
