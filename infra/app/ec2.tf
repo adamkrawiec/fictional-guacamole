@@ -1,4 +1,4 @@
-# ---------- Network: default VPC, HTTP in from the load balancer only, no SSH ----------
+# ---------- Network: default VPC, HTTP in (via the load balancer when enabled), no SSH ----------
 data "aws_vpc" "default" {
   default = true
 }
@@ -9,15 +9,29 @@ resource "aws_security_group" "app" {
   vpc_id      = data.aws_vpc.default.id
 }
 
-# Only the load balancer can reach the app; the instance keeps a public IP solely for outbound
-# traffic (ECR, SSM, CloudWatch), but nothing on the internet can connect to it directly.
+# Load balancer enabled: only the ALB can reach the app. The instance keeps a public IP solely for
+# outbound traffic (ECR, SSM, CloudWatch), but nothing on the internet can connect to it directly.
 resource "aws_vpc_security_group_ingress_rule" "http_from_alb" {
+  count = local.lb_enabled ? 1 : 0
+
   security_group_id            = aws_security_group.app.id
   description                  = "HTTP from the load balancer"
   ip_protocol                  = "tcp"
   from_port                    = 80
   to_port                      = 80
-  referenced_security_group_id = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.alb[0].id
+}
+
+# Load balancer disabled: the instance serves the internet directly.
+resource "aws_vpc_security_group_ingress_rule" "http_public" {
+  count = local.lb_enabled ? 0 : 1
+
+  security_group_id = aws_security_group.app.id
+  description       = "HTTP from anywhere (no load balancer)"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+  cidr_ipv4         = "0.0.0.0/0"
 }
 
 resource "aws_vpc_security_group_egress_rule" "all" {
@@ -115,5 +129,17 @@ resource "aws_instance" "app" {
   lifecycle {
     # A new Amazon Linux release would otherwise replace the instance on the next apply
     ignore_changes = [ami]
+  }
+}
+
+# Stable public address, only while there's no load balancer in front (the ALB has its own DNS name)
+resource "aws_eip" "app" {
+  count = local.lb_enabled ? 0 : 1
+
+  instance = aws_instance.app.id
+  domain   = "vpc"
+
+  tags = {
+    Name = var.project
   }
 }
