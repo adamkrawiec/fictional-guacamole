@@ -1,7 +1,7 @@
 node_modules
+**/node_modules
 dist
-/node_modules/**
-/dist/**
+**/dist
 # Terraform
 .terraform/
 *.tfstate
@@ -9,3 +9,7 @@ dist
 *.tfplan
 crash.log
 sketches
+# Local environment files (examples are committed)
+.env
+.env.*
+!.env.example

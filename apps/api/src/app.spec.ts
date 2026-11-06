@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import app from "./app";
 
 describe("app", () => {
-  describe("GET /", () => {
+  describe("GET /api", () => {
     it("returns a hello world message", async () => {
-      const res = await request(app).get("/");
+      const res = await request(app).get("/api");
 
       expect(res.status).toBe(200);
       expect(res.headers["content-type"]).toMatch(/application\/json/);
@@ -13,9 +13,9 @@ describe("app", () => {
     });
   });
 
-  describe("GET /test", () => {
+  describe("GET /api/test", () => {
     it("returns the docker build test message", async () => {
-      const res = await request(app).get("/test");
+      const res = await request(app).get("/api/test");
 
       expect(res.status).toBe(200);
       expect(res.headers["content-type"]).toMatch(/application\/json/);
