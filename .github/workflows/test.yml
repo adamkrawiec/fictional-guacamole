@@ -4,6 +4,9 @@ on:
   push:
     branches: ["**"]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -12,9 +15,50 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm exec biome ci .
 
-  test:
+  # Decides which test jobs below need to run
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # YAML anchor: files both apps depend on, so a change there tests both
+          filters: |
+            shared: &shared
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "tsconfig.base.json"
+              - "packages/**"
+              - ".github/workflows/test.yml"
+              - ".github/actions/setup/**"
+            api:
+              - *shared
+              - "apps/api/**"
+            web:
+              - *shared
+              - "apps/web/**"
+
+  test-api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm test run
+      - run: pnpm --filter @guacamole/api typecheck
+      - run: pnpm --filter @guacamole/api test
+
+  test-web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @guacamole/web test
+      - run: pnpm --filter @guacamole/web build # type-checks src (tests included), then bundles

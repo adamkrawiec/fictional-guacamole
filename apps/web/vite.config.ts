@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 
@@ -14,6 +15,10 @@ export default defineConfig(({ mode }) => {
       proxy: {
         "/api": env.API_PROXY_TARGET || "http://localhost:8000",
       },
+    },
+    test: {
+      environment: "jsdom", // a simulated browser: document, window, etc.
+      setupFiles: ["./src/test/setup.ts"],
     },
   };
 });
