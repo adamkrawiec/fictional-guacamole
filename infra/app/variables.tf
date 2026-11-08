@@ -62,3 +62,9 @@ variable "certificate_arn" {
   type        = string
   default     = null
 }
+
+variable "enable_frontend" {
+  description = "Host the React frontend in S3 behind CloudFront (which also forwards /api to the app). Set to false to delete the bucket and distribution."
+  type        = bool
+  default     = false
+}

@@ -10,6 +10,7 @@ description: Use when editing Terraform in a project where Claude must not run t
 
 - Check `.claude/settings.json` / hooks: if `terraform`, `tofu` or `aws` are blocked, never run them in any shell. Give the user the commands instead.
 - Leave changes uncommitted on the current branch unless asked.
+- When a feature requests multiplesteps, and terraform is included, terraform changes must go first, as a separate action/prompt. Once this is done and confirmed, one can continue.
 
 ## Before editing
 
