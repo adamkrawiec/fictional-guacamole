@@ -50,6 +50,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+      - name: Generate Prisma client (git-ignored, needed by typecheck)
+        run: pnpm --filter @guacamole/api db:generate
       - run: pnpm --filter @guacamole/api typecheck
       - run: pnpm --filter @guacamole/api test
 

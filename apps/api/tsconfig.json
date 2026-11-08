@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2016" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "target": "es2022" /* Node 24 runs ES2022 natively; also needed by the generated Prisma client */,
     "module": "commonjs" /* Specify what module code is generated. */,
     "noEmit": true /* typecheck only; tsconfig.build.json turns emit back on */,
     "types": ["node"] /* load Node globals like process */,

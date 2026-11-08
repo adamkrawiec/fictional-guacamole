@@ -1,0 +1,29 @@
+# Local development services. Start: docker compose up -d   Stop: docker compose down
+# Data lives in the "postgres-data" volume; `docker compose down -v` deletes it (fresh database).
+name: fictional-guacamole
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      # From the root .env (copy .env.example). Compose stops with this message if one is missing.
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env (see .env.example)}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (see .env.example)}
+      POSTGRES_DB: guacamole
+    ports:
+      # Override with POSTGRES_PORT=5433 in a root .env if 5432 is taken by a local Postgres
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql (not .../data as in older versions)
+      - postgres-data:/var/lib/postgresql
+      # Runs once, when the volume is first created
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # $$ = read the variable inside the container, not when Compose parses this file
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
