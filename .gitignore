@@ -13,3 +13,4 @@ sketches
 .env
 .env.*
 !.env.example
+.tf_output

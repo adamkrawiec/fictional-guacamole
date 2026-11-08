@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-api:
     runs-on: ubuntu-latest
     env:
       IMAGE: ${{ vars.ECR_REPOSITORY_URL }}:${{ github.sha }}
@@ -42,3 +42,38 @@ jobs:
             --parameters "commands=[\"/usr/local/bin/deploy-app ${{ github.sha }}\"]" \
             --query Command.CommandId --output text)
           aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "${{ vars.EC2_INSTANCE_ID }}"
+
+  # Runs in parallel with deploy-api: the React build goes to S3, CloudFront serves it
+  deploy-web:
+    runs-on: ubuntu-latest
+    env:
+      BUCKET: ${{ vars.FRONTEND_BUCKET }}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: Install Node and dependencies
+        uses: ./.github/actions/setup
+      - name: Build frontend
+        run: pnpm --filter @guacamole/web build
+      - name: AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Upload to S3
+        run: |
+          # Hashed file names (index-3f9a1c.js) never change content: cache for a year.
+          # No --delete here, so a browser still holding the previous index.html can load its files.
+          aws s3 sync apps/web/dist/assets "s3://$BUCKET/assets" \
+            --cache-control "public, max-age=31536000, immutable"
+          # index.html and other unhashed files: browsers must re-check them on every visit
+          aws s3 sync apps/web/dist "s3://$BUCKET" \
+            --exclude "assets/*" \
+            --cache-control "no-cache" \
+            --delete
+      - name: Refresh CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*" \
+            --query Invalidation.Id --output text
