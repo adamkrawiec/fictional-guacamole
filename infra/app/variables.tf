@@ -51,8 +51,20 @@ variable "create_github_oidc_provider" {
   default     = true
 }
 
+variable "enable_load_balancer" {
+  description = "Run the Application Load Balancer. Set to false to delete it (it's billed hourly and can't be paused) and serve the instance directly on an Elastic IP."
+  type        = bool
+  default     = true
+}
+
 variable "certificate_arn" {
   description = "ACM certificate ARN (same region as the ALB) to enable HTTPS on the load balancer. Leave null for HTTP only."
   type        = string
   default     = null
+}
+
+variable "enable_frontend" {
+  description = "Host the React frontend in S3 behind CloudFront (which also forwards /api to the app). Set to false to delete the bucket and distribution."
+  type        = bool
+  default     = false
 }

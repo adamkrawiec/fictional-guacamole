@@ -1,0 +1,36 @@
+name: Terraform
+
+# Static checks only: no AWS credentials, no state. `terraform plan` / `apply` still run from your
+# machine, because state is local (infra/app/terraform.tfstate).
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # report both modules even if one fails
+      matrix:
+        dir: [infra/app, infra/bootstrap]
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false # plain output and exit codes
+      - name: Format
+        run: terraform fmt -check -diff
+      - name: Init (providers only, no backend/state)
+        run: terraform init -backend=false -input=false
+      - name: Validate
+        run: terraform validate
