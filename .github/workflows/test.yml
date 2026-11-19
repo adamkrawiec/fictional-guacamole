@@ -47,12 +47,32 @@ jobs:
     needs: changes
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
+    services:
+      # A fresh Postgres for every run, thrown away afterwards
+      postgres:
+        image: postgres:18-alpine # same major version as docker-compose.yml
+        env:
+          POSTGRES_USER: guac
+          POSTGRES_PASSWORD: guac
+          POSTGRES_DB: guacamole_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U guac -d guacamole_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Throwaway CI-only credentials for the service above; not a secret
+      DATABASE_URL: postgresql://guac:guac@localhost:5432/guacamole_test
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Generate Prisma client (git-ignored, needed by typecheck)
         run: pnpm --filter @guacamole/api db:generate
       - run: pnpm --filter @guacamole/api typecheck
+      - name: Apply migrations to the test database
+        run: pnpm --filter @guacamole/api db:deploy
       - run: pnpm --filter @guacamole/api test
 
   test-web:
