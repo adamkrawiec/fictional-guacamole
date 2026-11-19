@@ -30,6 +30,23 @@ describe("routes", () => {
     expect(await screen.findByText("API says: hello world")).toBeInTheDocument();
   });
 
+  it("renders the users page at /users", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          Response.json({ users: [{ id: "1", name: "Ada Lovelace", email: "ada@example.com" }] }),
+        ),
+      ),
+    );
+
+    renderAt("/users");
+
+    expect(screen.getByRole("heading", { name: "Users" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByRole("cell", { name: "ada@example.com" })).toBeInTheDocument();
+  });
+
   it("renders the not-found page for unknown paths", () => {
     renderAt("/does-not-exist");
 

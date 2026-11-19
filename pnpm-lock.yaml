@@ -196,6 +196,9 @@ importers:
       pg:
         specifier: ^8.23.1
         version: 8.23.1
+      prisma:
+        specifier: 7.10.1
+        version: 7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2)
     devDependencies:
       '@types/cookie-parser':
         specifier: ^1.4.10
@@ -215,9 +218,6 @@ importers:
       '@types/supertest':
         specifier: ^7.2.1
         version: 7.2.1
-      prisma:
-        specifier: 7.10.1
-        version: 7.10.1(@types/node@26.6.6)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2)
       supertest:
         specifier: 7.3.0
         version: 7.3.0

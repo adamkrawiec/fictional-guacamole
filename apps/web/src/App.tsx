@@ -12,6 +12,9 @@ export function App() {
           <NavLink to="/" end className={navLinkClass}>
             Home
           </NavLink>
+          <NavLink to="/users" className={navLinkClass}>
+            Users
+          </NavLink>
           <NavLink to="/register" className={navLinkClass}>
             Register
           </NavLink>
