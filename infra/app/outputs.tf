@@ -42,3 +42,18 @@ output "cloudfront_distribution_id" {
   description = "GitHub repository variable CLOUDFRONT_DISTRIBUTION_ID"
   value       = local.frontend_enabled ? aws_cloudfront_distribution.web[0].id : null
 }
+
+output "database_endpoint" {
+  description = "RDS host name (private: reachable from the app instance, or via SSM port forwarding)"
+  value       = local.db_enabled ? aws_db_instance.db[0].address : null
+}
+
+output "database_url_parameter" {
+  description = "SSM parameter holding DATABASE_URL"
+  value       = local.db_enabled ? aws_ssm_parameter.database_url[0].name : null
+}
+
+output "deploy_document_name" {
+  description = "GitHub repository variable DEPLOY_DOCUMENT_NAME"
+  value       = aws_ssm_document.deploy.name
+}

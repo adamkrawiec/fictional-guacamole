@@ -73,6 +73,7 @@ resource "aws_iam_role_policy" "github_deploy" {
         Action = "ssm:SendCommand"
         Resource = [
           "arn:${data.aws_partition.current.partition}:ssm:${var.region}::document/AWS-RunShellScript",
+          aws_ssm_document.deploy.arn,
           aws_instance.app.arn,
         ]
       },

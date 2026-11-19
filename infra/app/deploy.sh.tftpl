@@ -1,0 +1,55 @@
+#!/bin/bash
+# Rendered by Terraform into the SSM deploy document (deploy.tf). Terraform fills the
+# dollar-brace values when it renders this file; SSM fills the {{ ... }} parameters at run time.
+set -euo pipefail
+
+TAG="{{ ImageTag }}"
+MIGRATE_COMMAND="{{ MigrateCommand }}"
+IMAGE="${repository_url}:$TAG"
+ENV_FILE="${env_dir}/app.env"
+
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registry}
+docker pull "$IMAGE"
+
+# The container's environment, readable by root only
+install -d -m 700 "${env_dir}"
+umask 077
+: > "$ENV_FILE"
+if [ -n "${database_url_parameter}" ]; then
+  DATABASE_URL=$(aws ssm get-parameter --region ${region} --name "${database_url_parameter}" \
+    --with-decryption --query Parameter.Value --output text)
+  printf 'DATABASE_URL=%s\n' "$DATABASE_URL" >> "$ENV_FILE"
+fi
+
+# Migrations first: if they fail, the old container keeps serving
+if [ -n "$MIGRATE_COMMAND" ]; then
+  echo "Running migrations: $MIGRATE_COMMAND"
+  # shellcheck disable=SC2086 # word splitting is intended: "npx prisma migrate deploy" -> 4 args
+  docker run --rm --env-file "$ENV_FILE" "$IMAGE" $MIGRATE_COMMAND
+fi
+
+docker rm -f app 2>/dev/null || true
+docker run -d --name app \
+  --restart unless-stopped \
+  --env-file "$ENV_FILE" \
+  -p 80:${container_port} \
+  --log-driver awslogs \
+  --log-opt awslogs-region=${region} \
+  --log-opt awslogs-group=${log_group} \
+  --log-opt awslogs-stream=app \
+  "$IMAGE"
+
+# Wait for the app to answer
+for i in $(seq 1 15); do
+  if curl -fsS http://localhost/health; then
+    echo
+    echo "Deployed $IMAGE"
+    docker image prune -af --filter "until=72h" >/dev/null || true
+    exit 0
+  fi
+  sleep 2
+done
+
+echo "App did not become healthy" >&2
+docker logs --tail 50 app >&2 || true
+exit 1

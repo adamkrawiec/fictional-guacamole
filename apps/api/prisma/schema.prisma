@@ -1,0 +1,23 @@
+// Database schema. After changing it, create and apply a migration:
+//   pnpm --filter @guacamole/api db:migrate --name <what-changed>
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma" // git-ignored; compiled into dist/ with the rest of src/
+  moduleFormat = "cjs"                     // the API builds to CommonJS
+}
+
+// The connection URL comes from prisma.config.ts (Prisma 7)
+datasource db {
+  provider = "postgresql"
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("todos")
+}
