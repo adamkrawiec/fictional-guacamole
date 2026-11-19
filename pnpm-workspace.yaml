@@ -14,3 +14,4 @@ minimumReleaseAgeExclude:
   - "@better-auth/telemetry@1.7.26"
   - better-auth@1.7.26
   - better-call@1.4.6
+  - react-router@8.5.2

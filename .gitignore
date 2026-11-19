@@ -7,6 +7,8 @@ dist
 *.tfstate
 *.tfstate.*
 *.tfplan
+# Saved plans (terraform plan -out tfplan) contain the state, secrets included
+tfplan
 crash.log
 sketches
 # Local environment files (examples are committed)

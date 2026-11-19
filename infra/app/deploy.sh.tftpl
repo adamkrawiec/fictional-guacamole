@@ -20,6 +20,11 @@ if [ -n "${database_url_parameter}" ]; then
     --with-decryption --query Parameter.Value --output text)
   printf 'DATABASE_URL=%s\n' "$DATABASE_URL" >> "$ENV_FILE"
 fi
+# Better Auth (auth.tf)
+BETTER_AUTH_SECRET=$(aws ssm get-parameter --region ${region} --name "${auth_secret_parameter}" \
+  --with-decryption --query Parameter.Value --output text)
+printf 'BETTER_AUTH_SECRET=%s\n' "$BETTER_AUTH_SECRET" >> "$ENV_FILE"
+printf 'BETTER_AUTH_URL=%s\n' "${better_auth_url}" >> "$ENV_FILE"
 
 # Migrations first: if they fail, the old container keeps serving
 if [ -n "$MIGRATE_COMMAND" ]; then

@@ -26,6 +26,9 @@ COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 RUN pnpm install --frozen-lockfile --prod --filter @guacamole/api && pnpm store prune
 COPY --from=build /repo/apps/api/dist apps/api/dist
+# For migrations: the deploy runs `pnpm db:deploy` (prisma migrate deploy) in a one-off container
+COPY apps/api/prisma.config.ts apps/api/
+COPY apps/api/prisma apps/api/prisma
 
 WORKDIR /repo/apps/api
 EXPOSE 8000
