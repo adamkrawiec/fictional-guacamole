@@ -68,3 +68,33 @@ variable "enable_frontend" {
   type        = bool
   default     = false
 }
+
+variable "enable_database" {
+  description = "Run PostgreSQL on RDS for the API. To turn it off, first apply with db_deletion_protection = false."
+  type        = bool
+  default     = false
+}
+
+variable "db_instance_class" {
+  description = "RDS instance size. db.t4g.micro is the smallest; check the console for free-tier eligibility."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "db_engine_version" {
+  description = "PostgreSQL major version; matches the local Docker image. Use \"17\" if RDS doesn't offer 18 in the region."
+  type        = string
+  default     = "18"
+}
+
+variable "db_backup_retention_days" {
+  description = "Days of automatic backups (0-35). Accounts on the AWS free plan may only allow 1."
+  type        = number
+  default     = 7
+}
+
+variable "db_deletion_protection" {
+  description = "Block deleting the database. Set to false (and apply) before removing it."
+  type        = bool
+  default     = true
+}

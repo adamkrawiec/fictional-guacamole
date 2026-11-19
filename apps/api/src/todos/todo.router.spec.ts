@@ -3,8 +3,7 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import app from "../app";
 import { prisma } from "../db/prisma";
-
-type Todo = Awaited<ReturnType<typeof prisma.todo.create>>;
+import type { Todo } from "../generated/prisma/client";
 
 describe("todo.router", () => {
   let todos: Todo[] = [];

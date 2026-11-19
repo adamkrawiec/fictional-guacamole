@@ -1,8 +1,8 @@
 ---
+
 name: planning-work
 description: this is a discovery phase ticket, ahead of actual config, figure out changes
 ---
-
 
 Before any work is started, first plan and discuss steps to consider:
 1. does the ticket require any AWS infra change? Thus, will it touch terraform files?
