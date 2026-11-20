@@ -13,6 +13,9 @@ function mockApi() {
     if (url === "/api/auth/get-session") {
       return Promise.resolve(Response.json(signedIn ? { session: {}, user: ada } : null));
     }
+    if (url === "/api/users") {
+      return Promise.resolve(Response.json({ users: [ada] }));
+    }
     if (url === "/api/auth/sign-out") {
       signedIn = false;
       return Promise.resolve(Response.json({ success: true }));
