@@ -21,6 +21,12 @@ RUN corepack enable
 WORKDIR /repo
 ENV NODE_ENV=production PORT=8000
 
+# RDS certificates are signed by Amazon's own CA, which Node doesn't trust by default. node-postgres
+# treats sslmode=require as verify-full (checks the certificate and host name), so without this every
+# query fails with "self-signed certificate in certificate chain".
+ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /etc/ssl/certs/rds-global-bundle.pem
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/rds-global-bundle.pem
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
