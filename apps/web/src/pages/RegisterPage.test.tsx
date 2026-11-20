@@ -21,7 +21,7 @@ function renderRegister() {
 
 async function fillAndSubmit() {
   const user = userEvent.setup();
-  await user.type(screen.getByLabelText("Name"), "Ada Lovelace");
+  await user.type(await screen.findByLabelText("Name"), "Ada Lovelace");
   await user.type(screen.getByLabelText("Email"), "ada@example.com");
   await user.type(screen.getByLabelText(/Password/), "correct-horse-battery");
   await user.click(screen.getByRole("button", { name: "Create account" }));

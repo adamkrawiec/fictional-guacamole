@@ -25,7 +25,7 @@ describe("routes", () => {
   it("renders the home page at /", async () => {
     renderAt("/");
 
-    expect(screen.getByRole("heading", { name: "Hello world" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Hello world" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
     expect(await screen.findByText("API says: hello world")).toBeInTheDocument();
   });
@@ -33,24 +33,25 @@ describe("routes", () => {
   it("renders the users page at /users", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(() =>
-        Promise.resolve(
-          Response.json({ users: [{ id: "1", name: "Ada Lovelace", email: "ada@example.com" }] }),
-        ),
-      ),
+      vi.fn((url: string) => {
+        const ada = { id: "1", name: "Ada Lovelace", email: "ada@example.com" };
+        const body =
+          url === "/api/auth/get-session" ? { session: {}, user: ada } : { users: [ada] };
+        return Promise.resolve(Response.json(body));
+      }),
     );
 
     renderAt("/users");
 
-    expect(screen.getByRole("heading", { name: "Users" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Users" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Users" })).toHaveAttribute("aria-current", "page");
     expect(await screen.findByRole("cell", { name: "ada@example.com" })).toBeInTheDocument();
   });
 
-  it("renders the not-found page for unknown paths", () => {
+  it("renders the not-found page for unknown paths", async () => {
     renderAt("/does-not-exist");
 
-    expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Go home" })).toHaveAttribute("href", "/");
   });
 });
