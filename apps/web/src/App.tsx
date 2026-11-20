@@ -1,6 +1,5 @@
 import { Outlet } from "react-router";
 import { Navbar } from "./Navbar";
-import type { SessionData } from "./auth/session";
 
 // Root layout: a navbar pinned to the top, and every page rendered inside <Outlet /> below it
 export function App() {
