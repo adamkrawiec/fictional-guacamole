@@ -1,26 +1,18 @@
-import { NavLink, Outlet } from "react-router";
+import { Outlet } from "react-router";
+import { Navbar } from "./Navbar";
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  isActive ? "font-semibold" : "text-slate-500 hover:underline dark:text-slate-400";
-
-// Root layout: every page renders inside <Outlet />
+// Root layout: a navbar pinned to the top, and every page rendered inside <Outlet /> below it
 export function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
-        <nav className="mb-6 flex gap-4 text-sm">
-          <NavLink to="/" end className={navLinkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/users" className={navLinkClass}>
-            Users
-          </NavLink>
-          <NavLink to="/register" className={navLinkClass}>
-            Register
-          </NavLink>
-        </nav>
-        <Outlet />
-      </div>
-    </main>
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <Navbar />
+
+      {/* 3.5rem = the navbar's height (h-14), so the card stays centred in the space below it */}
+      <main className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+          <Outlet />
+        </div>
+      </main>
+    </div>
   );
 }
