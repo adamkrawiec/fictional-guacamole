@@ -38,6 +38,8 @@ resource "aws_ssm_document" "deploy" {
           container_port         = var.container_port
           env_dir                = "/etc/${var.project}"
           database_url_parameter = local.db_enabled ? aws_ssm_parameter.database_url[0].name : ""
+          auth_secret_parameter  = aws_ssm_parameter.better_auth_secret.name
+          better_auth_url        = local.better_auth_url
         }))
       }
     }]

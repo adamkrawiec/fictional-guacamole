@@ -57,3 +57,13 @@ output "deploy_document_name" {
   description = "GitHub repository variable DEPLOY_DOCUMENT_NAME"
   value       = aws_ssm_document.deploy.name
 }
+
+output "better_auth_secret_parameter" {
+  description = "SSM parameter holding BETTER_AUTH_SECRET"
+  value       = aws_ssm_parameter.better_auth_secret.name
+}
+
+output "better_auth_url" {
+  description = "BETTER_AUTH_URL passed to the API: the origin browsers must use"
+  value       = local.better_auth_url
+}

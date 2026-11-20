@@ -4,3 +4,14 @@ allowBuilds:
   "@prisma/engines": true
   esbuild: false
   prisma: true
+minimumReleaseAgeExclude:
+  - "@better-auth/core@1.7.26"
+  - "@better-auth/drizzle-adapter@1.7.26"
+  - "@better-auth/kysely-adapter@1.7.26"
+  - "@better-auth/memory-adapter@1.7.26"
+  - "@better-auth/mongo-adapter@1.7.26"
+  - "@better-auth/prisma-adapter@1.7.26"
+  - "@better-auth/telemetry@1.7.26"
+  - better-auth@1.7.26
+  - better-call@1.4.6
+  - react-router@8.5.2

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "target": "es2022" /* Node 24 runs ES2022 natively; also needed by the generated Prisma client */,
     "module": "commonjs" /* Specify what module code is generated. */,
+    "moduleResolution": "bundler" /* resolves package "exports"; ESM-only deps like better-auth load via Node 24 require(esm) */,
     "noEmit": true /* typecheck only; tsconfig.build.json turns emit back on */,
     "types": ["node"] /* load Node globals like process */,
     "esModuleInterop": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,
