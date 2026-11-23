@@ -67,3 +67,13 @@ output "better_auth_url" {
   description = "BETTER_AUTH_URL passed to the API: the origin browsers must use"
   value       = local.better_auth_url
 }
+
+output "email_queue_url" {
+  description = "SQS queue the API sends email jobs to (EMAIL_QUEUE_URL). Null while emails are off."
+  value       = local.email_enabled ? aws_sqs_queue.emails[0].url : null
+}
+
+output "email_dlq_url" {
+  description = "Dead-letter queue: email jobs that failed 5 times"
+  value       = local.email_enabled ? aws_sqs_queue.emails_dlq[0].url : null
+}

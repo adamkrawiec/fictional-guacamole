@@ -11,7 +11,7 @@ resource "aws_ssm_document" "deploy" {
 
   content = jsonencode({
     schemaVersion = "2.2"
-    description   = "Pull an image from ECR, pass the app's environment, optionally migrate, and restart the container"
+    description   = "Pull an image from ECR, pass the app's environment, optionally migrate, and restart the app and worker containers"
     parameters = {
       ImageTag = {
         type           = "String"
@@ -40,6 +40,8 @@ resource "aws_ssm_document" "deploy" {
           database_url_parameter = local.db_enabled ? aws_ssm_parameter.database_url[0].name : ""
           auth_secret_parameter  = aws_ssm_parameter.better_auth_secret.name
           better_auth_url        = local.better_auth_url
+          email_queue_url        = local.email_enabled ? aws_sqs_queue.emails[0].url : ""
+          email_from             = local.email_enabled ? var.email_from : ""
         }))
       }
     }]

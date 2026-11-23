@@ -98,3 +98,15 @@ variable "db_deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "email_from" {
+  description = "Sender address for app emails (SES). Setting it creates the email queue, SES identity and worker config, and SES emails this address a verification link. null: emails off. Keep it out of the committed terraform.tfvars: use private.auto.tfvars (git-ignored)."
+  type        = string
+  default     = null
+}
+
+variable "alert_email" {
+  description = "Where alarms are emailed (e.g. emails stuck in the dead-letter queue). null: no alarms. Needs email_from too."
+  type        = string
+  default     = null
+}
