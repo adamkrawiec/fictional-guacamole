@@ -7,6 +7,8 @@ dist
 *.tfstate
 *.tfstate.*
 *.tfplan
+# Private Terraform values (e.g. your email address), loaded automatically by terraform
+private.auto.tfvars
 # Saved plans (terraform plan -out tfplan) contain the state, secrets included
 tfplan
 crash.log
