@@ -1,21 +1,13 @@
-import type { EmailJob } from "./email-job";
+import { escapeHtml, type RenderedEmail } from "./rendered-email";
 
-export type RenderedEmail = {
-  subject: string;
-  text: string;
-  html: string;
+type VerifyAccountEmailProps = {
+  name: string;
+  url: string; // Better Auth's signed verification link
 };
 
-const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
-export function renderEmail(job: EmailJob): RenderedEmail {
-  const greeting = job.name ? `Hello ${job.name},` : "Hello,";
+// Sent on sign-up (and on resend): the user must open the link before they can sign in
+export function VerifyAccountEmail({ name, url }: VerifyAccountEmailProps): RenderedEmail {
+  const greeting = name ? `Hello ${name},` : "Hello,";
 
   return {
     subject: "Confirm your email for Fictional Guacamole",
@@ -23,13 +15,13 @@ export function renderEmail(job: EmailJob): RenderedEmail {
       greeting,
       "",
       "Welcome to Fictional Guacamole! Please confirm your email address by opening this link:",
-      job.url,
+      url,
       "",
       "The link expires in 24 hours. If you didn't create an account, you can ignore this email.",
     ].join("\n"),
     html: `<p>${escapeHtml(greeting)}</p>
 <p>Welcome to Fictional Guacamole! Please confirm your email address:</p>
-<p><a href="${escapeHtml(job.url)}">Confirm my email</a></p>
+<p><a href="${escapeHtml(url)}">Confirm my email</a></p>
 <p>The link expires in 24 hours. If you didn't create an account, you can ignore this email.</p>`,
   };
 }
