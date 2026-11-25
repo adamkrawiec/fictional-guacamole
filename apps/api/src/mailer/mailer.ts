@@ -1,5 +1,6 @@
 import { ConsoleMailer } from "./console-mailer";
 import { SesMailer } from "./ses-mailer";
+import { SmtpMailer } from "./smtp-mailer";
 
 export type OutgoingEmail = {
   to: string;
@@ -12,12 +13,21 @@ export interface Mailer {
   send(email: OutgoingEmail): Promise<void>;
 }
 
-// SES when a sender is configured (production, via the deploy's env file); otherwise the console,
-// so local development and tests never send real email or need AWS credentials.
-export function createMailer(): Mailer {
-  const from = process.env.EMAIL_FROM;
-  if (from && process.env.NODE_ENV !== "test") {
-    return new SesMailer(from);
+// Which mailer sends email, picked from the environment:
+//   SMTP_URL    -> SMTP, locally to Mailpit (apps/api/.env); never set in production
+//   EMAIL_FROM  -> Amazon SES (production, via the deploy's env file)
+//   otherwise   -> printed to the console
+// Tests never send anything: their queue only records jobs (src/queue/email-queue.ts).
+export function createMailer(env: NodeJS.ProcessEnv = process.env): Mailer {
+  if (env.NODE_ENV === "test") {
+    return new ConsoleMailer();
+  }
+  if (env.SMTP_URL) {
+    const from = env.EMAIL_FROM ?? "Fictional Guacamole <no-reply@localhost>";
+    return new SmtpMailer(env.SMTP_URL, from);
+  }
+  if (env.EMAIL_FROM) {
+    return new SesMailer(env.EMAIL_FROM);
   }
   return new ConsoleMailer();
 }

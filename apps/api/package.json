@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "dev": "node dist/server.js",
     "worker": "node dist/worker.js",
+    "set-role": "node dist/scripts/set-role.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "prisma generate",
@@ -28,6 +29,7 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.3.0",
+    "nodemailer": "^10.6.1",
     "pg": "^8.23.1",
     "prisma": "7.10.1"
   },
@@ -36,6 +38,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
     "supertest": "7.3.0",
