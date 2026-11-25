@@ -37,8 +37,22 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
   sessions      Session[]
   accounts      Account[]
+  // Better Auth admin plugin (src/auth/permissions.ts says what each role may do)
+  role          UserRole  @default(user)
+  banned        Boolean   @default(false)
+  banReason     String?   @map("ban_reason")
+  banExpires    DateTime? @map("ban_expires")
 
   @@map("users")
+}
+
+// Values are the role names Better Auth reads and writes ("user", "admin"), so they stay lowercase.
+// Adding one: add it here and give it permissions in src/auth/permissions.ts (typecheck enforces both).
+enum UserRole {
+  user
+  admin
+
+  @@map("user_role")
 }
 
 model Session {
@@ -51,6 +65,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  impersonatedBy String? @map("impersonated_by") // the admin's user id while impersonating
 
   @@index([userId])
   @@map("sessions")

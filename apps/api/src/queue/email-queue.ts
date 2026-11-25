@@ -1,13 +1,13 @@
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import type { EmailJob } from "../emails/email-job";
 import { handleEmailJob } from "../emails/handle-email-job";
-import { ConsoleMailer } from "../mailer/console-mailer";
+import { createMailer } from "../mailer/mailer";
 
 // Where enqueued emails go, picked once at startup:
 //   tests            -> recorded in memory (recordedEmailJobs), never sent, never reaches AWS,
 //                       even if a local .env has a real EMAIL_QUEUE_URL
 //   EMAIL_QUEUE_URL  -> SQS, and the worker container (src/worker.ts) sends them
-//   otherwise (dev)  -> handled right away in this process, printed to the console
+//   otherwise (dev)  -> handled right away in this process: Mailpit, or the console
 type EnqueueFn = (job: EmailJob) => Promise<void>;
 
 export const recordedEmailJobs: EmailJob[] = [];
@@ -29,7 +29,7 @@ function createEnqueue(): EnqueueFn {
     };
   }
 
-  const mailer = new ConsoleMailer();
+  const mailer = createMailer(); // Mailpit with SMTP_URL set, else the console
   return (job) => handleEmailJob(job, mailer);
 }
 
