@@ -1,4 +1,4 @@
-import { redirect } from "react-router";
+import { redirect, useRouteLoaderData } from "react-router";
 
 // The signed-in user, as Better Auth's GET /api/auth/get-session returns it (null when signed out)
 export type SessionUser = {
@@ -23,6 +23,11 @@ export async function sessionLoader(): Promise<SessionData> {
     // API unreachable: treat as signed out rather than breaking the whole app
     return null;
   }
+}
+
+// The current session from any page (null when signed out). Same data as the navbar's.
+export function useSession(): SessionData {
+  return (useRouteLoaderData("root") as SessionData | undefined) ?? null;
 }
 
 // POST /logout (from the nav's form): ends the session, which clears the cookie, then goes home

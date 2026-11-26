@@ -1,2 +1,16 @@
 /* Tailwind v4: this one line loads the base styles and every utility class used in src/ */
 @import "tailwindcss";
+
+/* Tailwind v4 gives buttons the default arrow cursor (v3 used the pointer). Bring the pointer
+   back for every clickable button, and show "not allowed" while one is disabled. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"]:disabled {
+    cursor: not-allowed;
+  }
+}

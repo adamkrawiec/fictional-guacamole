@@ -5,12 +5,15 @@ import { HomePage } from "./pages/HomePage";
 import { LoginPage, loginAction } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { RegisterPage, registerAction } from "./pages/RegisterPage";
+import { UserEditPage } from "./pages/UserEditPage";
+import { UserProfilePage } from "./pages/UserProfilePage";
 import { UsersPage } from "./pages/UsersPage";
 
 // All app routes in one place. main.tsx wraps them in a browser router; tests use a memory router.
 // Add a page: create it in src/pages/ and add a child here, e.g. { path: "login", element: <LoginPage /> }.
 export const routes: RouteObject[] = [
   {
+    id: "root", // lets pages read the session: useSession() in auth/session.ts
     path: "/",
     element: <App />,
     loader: sessionLoader, // the current user, for the nav
@@ -21,6 +24,8 @@ export const routes: RouteObject[] = [
       { path: "login", element: <LoginPage />, action: loginAction },
       { path: "register", element: <RegisterPage />, action: registerAction },
       { path: "users", element: <UsersPage /> },
+      { path: "users/:id", element: <UserProfilePage /> },
+      { path: "users/:id/edit", element: <UserEditPage /> },
       { path: "logout", action: logoutAction },
       { path: "*", element: <NotFoundPage /> },
     ],
