@@ -48,6 +48,24 @@ describe("routes", () => {
     expect(await screen.findByRole("cell", { name: "ada@example.com" })).toBeInTheDocument();
   });
 
+  it("renders a user's profile at /users/:id", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url: string) => {
+        const body =
+          url === "/api/users/u1"
+            ? { user: { id: "u1", name: "Ada Lovelace", email: "ada@example.com" } }
+            : null;
+        return Promise.resolve(Response.json(body));
+      }),
+    );
+
+    renderAt("/users/u1");
+
+    expect(await screen.findByRole("heading", { name: "Profile" })).toBeInTheDocument();
+    expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
+  });
+
   it("renders the not-found page for unknown paths", async () => {
     renderAt("/does-not-exist");
 

@@ -109,7 +109,18 @@ describe("auth + user.router", () => {
       expect(res.status).toBe(401);
     });
 
-    it("returns all users to a signed-in user", async () => {
+    it("returns 403 to a signed-in user who isn't an admin", async () => {
+      const agent = request.agent(app);
+      await agent.post("/api/auth/sign-in/email").send({ email, password }).expect(200);
+
+      const res = await agent.get("/api/users");
+
+      expect(res.status).toBe(403);
+      expect(res.body).toEqual({ error: "Forbidden" });
+    });
+
+    it("returns all users to an admin", async () => {
+      await prisma.user.update({ where: { email }, data: { role: "admin" } });
       const agent = request.agent(app);
       await agent.post("/api/auth/sign-in/email").send({ email, password }).expect(200);
 
